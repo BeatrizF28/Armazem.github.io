@@ -1220,14 +1220,11 @@
                     // Simulação de resposta do servidor
                     setTimeout(() => {
                         if (username === 'teste@example.com' && password === 'senha123') { // Credenciais de exemplo
-                            loginMessage.className = 'success';
-                            loginMessage.textContent = 'Login bem-sucedido! Redirecionando...';
-                            
-                            //teste Paula
-                            // Redireciona para a página "minha_pagina.html"
-                            //window.location.href = "formulario.html";
-                            // fecharCadastro(); // Fecha o modal após o login bem-sucedido
-                        
+                            window.location.href = 'formulario.html'; // Redireciona para o formulário
+                   } else {
+                         document.getElementById('login-message').textContent = 'Nome ou senha incorretos.';
+                        document.getElementById('login-message').classList.add('error');
+                        }
                         } else {
                             loginMessage.className = 'error';
                             loginMessage.textContent = 'Falha no login. Verifique suas credenciais.';
