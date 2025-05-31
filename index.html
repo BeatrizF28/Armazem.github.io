@@ -1221,9 +1221,11 @@
                     setTimeout(() => {
                         if (username === 'teste@example.com' && password === 'senha123') { // Credenciais de exemplo
                             window.location.href = 'formulario.html'; // Redireciona para o formulário
-                   } else {
+                            <p>If you click the "Submit" button, the form-data will be sent to a page called
+                            "/formulario.html".</p>
+                        } else {
                          document.getElementById('login-message').textContent = 'Nome ou senha incorretos.';
-                        document.getElementById('login-message').classList.add('error');
+                         document.getElementById('login-message').classList.add('error');
                         }
                         } else {
                             loginMessage.className = 'error';
