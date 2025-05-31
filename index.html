@@ -1,0 +1,1287 @@
+<!DOCTYPE html> 
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Armazém da Dona Lurdes</title>
+    <style>
+        /* =========================================================
+           LAYOUT DO SITE
+           Estilos globais e de estrutura (cabeçalho, corpo, seções)
+           ========================================================= */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f8f8;
+        }
+
+        header {
+            background-color: #558b2f;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #filtros-e-carrinho {
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            background-color: #f1f8e9;
+            border-bottom: 1px solid #dcedc8;
+        }
+
+        #filtros {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        #filtros button {
+            background-color: #aed581;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #33691e;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        #filtros button:hover {
+            background-color: #9ccc65;
+        }
+
+        #carrinho-info {
+            font-weight: bold;
+            color: #33691e;
+            flex-grow: 1; /* Permite que ocupe espaço disponível */
+            text-align: right;
+            margin-right: 1rem;
+        }
+
+        #ver-carrinho, #abrir-cadastro { /* Adicionado #abrir-cadastro para estilos */
+            background-color: #8bc34a;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #ver-carrinho:hover, #abrir-cadastro:hover { /* Adicionado #abrir-cadastro para estilos */
+            background-color: #7cb342;
+        }
+
+        #produtos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .produto {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s ease;
+        }
+        .produto:hover {
+            transform: translateY(-5px);
+        }
+
+        .produto img {
+            max-width: 100%;
+            height: 150px; /* Altura fixa para imagens */
+            object-fit: cover; /* Garante que a imagem preencha o espaço */
+            border-radius: 4px;
+            margin-bottom: 0.8rem;
+        }
+
+        .produto h3 {
+            margin: 0.5rem 0;
+            color: #4CAF50;
+            font-size: 1.1rem;
+        }
+
+        .produto p {
+            margin: 0.3rem 0;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .produto button.adicionar {
+            margin-top: 1rem;
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #8bc34a;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+        }
+        .produto button.adicionar:hover {
+            background-color: #7cb342;
+        }
+
+        /* Estilo para o controle de quantidade do produto */
+        .controle-quantidade {
+            margin-top: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            border-radius: 6px;
+            background: #dcedc8;
+            padding: 0.25rem 0.6rem;
+            user-select: none;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .controle-quantidade button {
+            background-color: #558b2f;
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .controle-quantidade button:hover {
+            background-color: #4a7a26;
+        }
+
+        .controle-quantidade span {
+            min-width: 30px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #33691e;
+            user-select: none;
+        }
+
+        /* =========================================================
+           MODAIS GERAIS (FORMULÁRIO DE COMPRA, CARRINHO, CADASTRO)
+           Estilos para o overlay e os modais
+           ========================================================= */
+        #formulario-compra-overlay, #carrinho-overlay, #cadastro-overlay { /* Adicionado #cadastro-overlay */
+            display: none; /* Inicialmente escondido */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        #formulario-compra-modal, #carrinho-modal, #cadastro-modal { /* Adicionado #cadastro-modal */
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 550px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        #formulario-compra-modal h2, #carrinho-modal h2, #cadastro-modal h2 { /* Adicionado #cadastro-modal h2 */
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #33691e;
+            font-size: 1.8rem;
+        }
+
+        #formulario-compra-modal label, #cadastro-modal label { /* Adicionado #cadastro-modal label */
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #33691e;
+            font-size: 1rem;
+        }
+
+        #formulario-compra-modal input[type="text"],
+        #formulario-compra-modal input[type="email"],
+        #formulario-compra-modal textarea,
+        #cadastro-modal input[type="text"], /* Adicionado para o modal de cadastro */
+        #cadastro-modal input[type="email"], /* Adicionado para o modal de cadastro */
+        #cadastro-modal input[type="password"], /* Adicionado para o modal de cadastro */
+        #cadastro-modal input[type="tel"] { /* Adicionado para o modal de cadastro */
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        #formulario-compra-modal textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        #formulario-compra-modal .radio-group {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        #formulario-compra-modal .radio-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+
+        #formulario-compra-modal .radio-group input[type="radio"] {
+            margin-right: 8px;
+            width: auto; /* Override default input[type=text] width */
+            margin-bottom: 0;
+        }
+
+        #formulario-compra-modal button[type="button"], #cadastro-modal button[type="submit"] { /* Adicionado #cadastro-modal button[type="submit"] */
+            background-color: #25d366; /* Cor do WhatsApp ou verde genérico para ação */
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        #formulario-compra-modal button[type="button"]:hover, #cadastro-modal button[type="submit"]:hover { /* Adicionado #cadastro-modal button[type="submit"] */
+            background-color: #1e8e49;
+        }
+
+        .fechar-formulario, .fechar-carrinho, .fechar-cadastro { /* Adicionado .fechar-cadastro */
+            background-color: transparent;
+            color: #777;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            transition: color 0.2s ease;
+        }
+        .fechar-formulario:hover, .fechar-carrinho:hover, .fechar-cadastro:hover { /* Adicionado .fechar-cadastro */
+            color: #000;
+        }
+
+        /* Estilos do Modal do Carrinho */
+        #carrinho-modal .item-carrinho {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+            color: #444;
+        }
+        #carrinho-modal .item-carrinho:last-child {
+            border-bottom: none;
+        }
+        #carrinho-modal .item-carrinho span {
+            flex-grow: 1;
+        }
+        #carrinho-modal .item-carrinho .preco-item {
+            font-weight: bold;
+            color: #33691e;
+            width: 80px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        #carrinho-modal .item-carrinho button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background-color 0.3s ease;
+        }
+        #carrinho-modal .item-carrinho button:hover {
+            background-color: #d32f2f;
+        }
+
+        #carrinho-modal .total-carrinho {
+            margin-top: 20px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #33691e;
+            border-top: 2px solid #dcedc8;
+            padding-top: 15px;
+        }
+
+        #carrinho-modal .botoes-carrinho {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        #carrinho-modal .botoes-carrinho button {
+            background-color: #25d366; /* Cor do WhatsApp */
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        #carrinho-modal .botoes-carrinho button.limpar {
+            background-color: #f44336;
+        }
+        #carrinho-modal .botoes-carrinho button:hover {
+            background-color: #1e8e49;
+        }
+        #carrinho-modal .botoes-carrinho button.limpar:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Estilos para a notificação de "toast" */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1002;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .toast-notification.show {
+            opacity: 1;
+        }
+
+        /* Estilos para o campo de verificação de raio */
+        .verificar-raio-container {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .verificar-raio-container button {
+            background-color: #4CAF50; /* Um verde diferente para destacar */
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            width: auto; /* Para não ocupar 100% da largura */
+        }
+        .verificar-raio-container button:hover {
+            background-color: #45a049;
+        }
+        .verificar-raio-resultado {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #33691e;
+        }
+
+        /* Estilos para o container de autenticação dentro do modal */
+        .auth-container {
+            background-color: white; /* Já é o fundo do modal, mas bom para consistência */
+            padding: 0; /* O padding já é dado pelo modal-body */
+            border-radius: 8px; /* Já é dado pelo modal-body */
+            box-shadow: none; /* A sombra já é dada pelo modal-body */
+            width: 100%;
+            max-width: 100%; /* Para se ajustar ao modal */
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .auth-container h2 {
+            color: #558b2f;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-container label {
+            display: block;
+            margin-bottom: 0.5rem;
+            text-align: left;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .auth-container input[type="text"],
+        .auth-container input[type="tel"],
+        .auth-container input[type="email"],
+        .auth-container input[type="password"] {
+            width: calc(100% - 20px); /* Ajusta para o padding */
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .auth-container button {
+            background-color: #558b2f;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .auth-container button:hover {
+            background-color: #4a7a26;
+        }
+
+        .switch-form {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .switch-form a {
+            color: #8bc34a;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .switch-form a:hover {
+            text-decoration: underline;
+        }
+
+        #login-message, #register-message { /* Estilo para as mensagens de login/cadastro */
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+        #login-message.error, #register-message.error {
+            color: red;
+        }
+        #login-message.success, #register-message.success {
+            color: green;
+        }
+
+
+        @media (max-width: 600px) {
+            #filtros-e-carrinho {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            #carrinho-info {
+                text-align: left;
+                margin-right: 0;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            #ver-carrinho, #abrir-cadastro { /* Adicionado #abrir-cadastro para telas pequenas */
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            #filtros {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Armazém da Dona Lurdes</h1>
+    </header>
+
+    <div id="filtros-e-carrinho">
+        <div id="filtros"></div>
+        <div id="carrinho-info">
+            Carrinho: 0 itens | Total: R$ 0,00
+        </div>
+        <button id="abrir-cadastro" onclick="exibirCadastro()" title="Cadastre-se">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+        <button id="ver-carrinho" onclick="exibirCarrinho()">Ver Carrinho</button>
+    </div>
+
+    <main>
+        <div id="produtos"></div>
+    </main>
+
+    <div id="carrinho-overlay">
+        <div id="carrinho-modal">
+            <button class="fechar-carrinho" onclick="fecharCarrinho()">X</button>
+            <h2>Seu Carrinho</h2>
+            <div id="carrinho-lista">
+                </div>
+            <div class="total-carrinho" id="carrinho-modal-total">
+                </div>
+            <div class="botoes-carrinho">
+                <button class="limpar" onclick="limparCarrinho()">Limpar Carrinho</button>
+                <button onclick="comprarProdutos()">Comprar Produtos</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="formulario-compra-overlay">
+        <div id="formulario-compra-modal">
+            <button class="fechar-formulario" onclick="fecharFormularioCompra()">X</button>
+            <h2>Dados para Contato e Pedido</h2>
+            <form id="formulario-compra">
+                <label for="nome">Nome:</label>
+                <input type="text" id="nome" name="nome" required>
+
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email">
+
+                <label for="telefone">Telefone:</label>
+                <input type="text" id="telefone" name="telefone" required>
+
+                <label>Tipo de Pedido:</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="tipoPedido" value="retirada" checked onchange="toggleEnderecoFields()"> Retirada no Estabelecimento
+                    </label>
+                    <label>
+                        <input type="radio" name="tipoPedido" value="entrega" onchange="toggleEnderecoFields()"> Para Entrega
+                    </label>
+                </div>
+
+                <div id="endereco-fields" style="display: none;">
+                    <label for="endereco">Endereço:</label>
+                    <input type="text" id="endereco" name="endereco">
+
+                    <label for="numero">Número:</label>
+                    <input type="text" id="numero" name="numero">
+
+                    <label for="bairro">Bairro:</label>
+                    <input type="text" id="bairro" name="bairro">
+
+                    <label for="cep">CEP:</label>
+                    <input type="text" id="cep" name="cep">
+
+                    <div class="verificar-raio-container">
+                        <label for="cidade-raio">Cidade para Entrega:</label>
+                        <input type="text" id="cidade-raio" name="cidade_raio" placeholder="Ex: Loanda">
+                        <button type="button" onclick="verificarRaioAtendimento()">Verificar Área de Atendimento</button>
+                        <div id="resultado-raio" class="verificar-raio-resultado"></div>
+                    </div>
+                </div>
+
+                <label for="mensagem">Observações (opcional):</label>
+                <textarea id="mensagem" name="mensagem" rows="4"></textarea>
+
+                <button type="button" onclick="enviarPedidoWhatsApp()">Enviar Pedido</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="cadastro-overlay">
+        <div id="cadastro-modal">
+            <button class="fechar-cadastro" onclick="fecharCadastro()">X</button>
+            <div class="auth-container">
+                <div id="login-form">
+                    <h2>Acesso</h2>
+                    <form id="loginForm">
+                        <label for="login-username">Nome de Usuário ou E-mail:</label>
+                        <input type="text" id="login-username" name="username" required autocomplete="username" />
+
+                        <label for="login-password">Senha:</label>
+                        <input type="password" id="login-password" name="password" required minlength="6" autocomplete="current-password" />
+
+                        <button type="submit">Entrar</button>
+                    </form>
+                    <div class="switch-form">
+                        Não tem uma conta? <a href="#" id="show-register">Cadastre-se</a>
+                    </div>
+                    <p id="login-message"></p>
+                </div>
+
+                <div id="register-form" style="display: none;">
+                    <h2>Cadastro</h2>
+                    <form id="registerForm">
+                        <label for="register-firstname">Primeiro Nome:</label>
+                        <input type="text" id="register-firstname" name="firstname" required autocomplete="given-name" />
+
+                        <label for="register-tel">Número de Telefone:</label>
+                        <input type="tel" id="register-tel" name="tel" required autocomplete="tel" pattern="[0-9]{10,15}" title="Por favor, insira um número de telefone válido." />
+
+                        <label for="register-email">E-mail:</label>
+                        <input type="email" id="register-email" name="email" required autocomplete="email" />
+
+                        <label for="register-city">Cidade:</label>
+                        <input type="text" id="register-city" name="city" required autocomplete="address-level2" />
+
+                        <label for="register-password">Senha (6+ dígitos):</label>
+                        <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password" />
+
+                        <label for="register-confirm-password">Confirmar Senha:</label>
+                        <input type="password" id="register-confirm-password" name="confirmPassword" required autocomplete="new-password" />
+
+                        <button type="submit">Cadastrar</button>
+                    </form>
+                    <div class="switch-form">
+                        Já tem uma conta? <a href="#" id="show-login">Fazer Login</a>
+                    </div>
+                    <p id="register-message"></p>
+                </div>
+            </div>
+        </div>
+    </div>  
+
+    <script>
+        // Dados dos produtos disponíveis, organizados por categoria
+        const produtosPorCategoria = {
+            "Frutas": [
+                { nome: "Maçã (un)", preco: 1.0, imagem: "https://www.vortexmag.net/wp-content/uploads/2020/02/apples3-big.jpg" },
+                { nome: "Banana (kg)", preco: 6.0, imagem: "https://th.bing.com/th/id/OIP.iFm2DffdX5eMg2LjmcRovQHaEK?w=321&h=181&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
+                { nome: "Laranja (un)", preco: 2.0, imagem: "https://www.mundoboaforma.com.br/wp-content/uploads/2016/02/laranja-no-jardim.jpg" },
+                { nome: "Pera (un)", preco: 3.2, imagem: "https://th.bing.com/th/id/OIP.hRko0yZKYSB9z3p_t8-oRwHaE7?w=294&h=196&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
+                { nome: "Uva (cacho)", preco: 2.0, imagem: "https://hips.hearstapps.com/ghk.h-cdn.co/assets/17/50/1513015699-red-green-grapes.jpg" },
+                { nome: "Melancia (un)", preco: 50.0, imagem: "https://img-21.ccm2.net/xQsG1nfqxhxYg9n9I_bc_F_XJAk=/cd169fee2b044bfd82a9c43909c3e56f/ccm-faq/1179706.jpg" },
+                { nome: "Mamão (un)", preco: 6.0, imagem: "https://folhago.com.br/blogs/almanaque/wp-content/uploads/2022/05/Conheca-6-poderosos-nutrientes-do-mamao-e-porque-voc-deve-comecar-a-comer-foto-Canva-2.jpg" },
+                { nome: "Abacaxi (un)", preco: 8.0, imagem: "https://www.curapelanatureza.com.br/wp-content/uploads/2019/09/abacaxi-remedio.jpg" },
+                { nome: "Manga (un)", preco: 4.0, imagem: "https://s4.static.brasilescola.uol.com.br/be/2022/01/manga.jpg" },
+                { nome: "Kiwi (un)", preco: 3.5, imagem: "https://th.bing.com/th/id/OIP.bzwz_a-JPbac4S7Mte3PNgHaEK?w=1200&h=675&rs=1&pid=ImgDetMain" }
+            ],
+            "Legumes": [
+                { nome: "Batata (un)", preco: 1.0, imagem: "https://th.bing.com/th/id/OIP.WLKplkBUUG9ebRzQKeXdRgHaE8?rs=1&pid=ImgDetMain" },
+                { nome: "Cenoura (un)", preco: 1.0, imagem: "https://revistacampoenegocios.com.br/wp-content/uploads/2021/11/Cenoura.jpg" },
+                { nome: "Beterraba (un)", preco: 2.2, imagem: "https://www.proveitoso.com/wp-content/uploads/2021/07/11765-768x542.jpg" },
+                { nome: "Abóbora (un)", preco: 2.8, imagem: "https://cdn.deliway.com.br/blog/base/3d5/04d/0c8/abobora-paulista.jpg" },
+                { nome: "Chuchu (un)", preco: 2.0, imagem: "https://frutasyverduras.info/wp-content/uploads/2019/07/chayote.jpg" },
+                { nome: "Mandioca (kg)", preco: 4.8, imagem: "https://www.cfn.org.br/wp-content/uploads/2015/07/Mandioca_Foto_Fernanda_Birolo-compressed-770x500.jpg" },
+                { nome: "Pepino (un)", preco: 2.2, imagem: "https://herograespeciales.com/wp-content/uploads/2019/11/shutterstock_724777696-pepinos-scaled.jpg" },
+                { nome: "Jiló (un)", preco: 3.0, imagem: "https://th.bing.com/th/id/OIP.pfPKjXJbLFIh37MRkQFJPQHaFl?rs=1&pid=ImgDetMain" }
+            ],
+            "Hortaliças": [
+                { nome: "Repolho (un)", preco: 3.5, imagem: "https://segredosdacomida.com.br/wp-content/uploads/2021/11/receitas-com-repolho.jpg" },
+                { nome: "Alface (un)", preco: 3.5, imagem: "https://http2.mlstatic.com/D_NQ_NP_700903-MLB44435475011_122020-F.jpg" },
+                { nome: "Rúcula (un)", preco: 4.2, imagem: "https://tribunadejundiai.com.br/wp-content/uploads/2022/06/Descubra-quais-sao-os-beneficios-da-rucula-para-sua-saude-1024x576.jpg" },
+                { nome: "Salsinha (maço)", preco: 1.9, imagem: "https://capitalist.com.br/wp-content/uploads/2022/08/salsa-1000x600.jpg" },
+                { nome: "Cebolinha (maço)", preco: 1.7, imagem: "https://foodwissen.de/wp-content/uploads/2023/03/schnittlauch-im-bund-auf-einem-holzbrett-800x525.jpg" },
+                { nome: "Couve (un)", preco: 4.6, imagem: "https://casaeconstrucao.org/wp-content/uploads/2022/04/2-beneficios-da-couve-para-a-saude.jpg" }
+            ],
+            "Conservas e Outros Produtos Naturais": [
+                { nome: "Pepino em Conserva (250g)", preco: 10.0, imagem: "https://t1.uc.ltmcdn.com/pt/posts/6/6/1/como_fazer_pepino_em_conserva_15166_orig.jpg" },
+                { nome: "Geleia de Morango (280g)", preco: 15.0, imagem: "https://ais.kochbar.de/kbrezept/516033_903659/1200x1200/himbeer-curd-rezept-bild-nr-11.jpg" },
+                { nome: "Queijo (30g/un)", preco: 7.0, imagem: "https://epices-review.fr/wp-content/uploads/2020/10/Par-quoi-remplacer-le-queso-fresco.jpg" },
+                { nome: "Farinha de Mandioca (kg)", preco: 12.5, imagem: "https://img.freepik.com/fotos-premium/farinha-de-mandioca-na-tigela_434193-5532.jpg" }
+            ],
+            "Artesanato": [
+                { nome: "Cesto Trançado (2 un)", preco: 58.0, imagem: "https://img.elo7.com.br/product/zoom/27BD65E/conjunto-de-cestos-trancados.jpg" },
+                { nome: "Tapete de Crochê - Tamanho Médio (un)", preco: 40.0, imagem: "https://www.katiaribeiro.com.br/wp-content/uploads/2023/04/GridArt_20230413_211456469.jpg" },
+                { nome: "Boneca de Pano (Kit 3 un)", preco: 35.0, imagem: "https://4.bp.blogspot.com/-UnAP93aBGvQ/XiVjEIRu0TI/AAAAAAABQbU/UeTSD3WtS6A7LPNY4kRxvEACjvi6TkRRACLcBGAsYHQ/s1600/boneca%2Bde%2Bpano%2Bcamponesa%2Bcom%2Bmolde%2Bpara%2Bimprimir%2B%25281%2529.jpg" }
+            ]
+        };
+
+        // Arrays para gerenciar o carrinho de compras e produtos selecionados
+        let carrinho = []; // Armazena os itens que estão no carrinho com suas quantidades
+        let produtosSelecionados = []; // Armazena os produtos que foram adicionados para o pedido final
+
+        /* =========================================================
+           FUNÇÕES DOS PRODUTOS
+           Funções para exibir os produtos e criar filtros de categoria
+           ========================================================= */
+
+        /**
+         * Exibe os produtos na página, filtrando por categoria se especificado.
+         * @param {string} categoriaSelecionada - A categoria a ser exibida (opcional).
+         */
+        function exibirProdutos(categoriaSelecionada = null) {
+            const container = document.getElementById('produtos');
+            container.innerHTML = ''; // Limpa a área de produtos antes de exibir
+
+            for (const categoria in produtosPorCategoria) {
+                // Se uma categoria foi selecionada, exibe apenas os produtos dela
+                if (categoriaSelecionada && categoria !== categoriaSelecionada) continue;
+
+                produtosPorCategoria[categoria].forEach(produto => {
+                    const div = document.createElement('div');
+                    div.className = 'produto';
+
+                    // Cria o controle de quantidade (+ e -) para cada produto
+                    const controleQuantidade = document.createElement('div');
+                    controleQuantidade.className = 'controle-quantidade';
+
+                    const btnMenos = document.createElement('button');
+                    btnMenos.textContent = '−';
+                    btnMenos.title = 'Diminuir quantidade';
+
+                    const spanQtd = document.createElement('span');
+                    spanQtd.textContent = '1'; // Quantidade inicial
+
+                    const btnMais = document.createElement('button');
+                    btnMais.textContent = '+';
+                    btnMais.title = 'Aumentar quantidade';
+
+                    controleQuantidade.appendChild(btnMenos);
+                    controleQuantidade.appendChild(spanQtd);
+                    controleQuantidade.appendChild(btnMais);
+
+                    // Botão "Adicionar ao Carrinho"
+                    const btnAdicionar = document.createElement('button');
+                    btnAdicionar.textContent = 'Adicionar ao Carrinho';
+                    btnAdicionar.className = 'adicionar';
+
+                    // Lógica para aumentar a quantidade no controle
+                    btnMais.onclick = () => {
+                        let qtd = parseInt(spanQtd.textContent);
+                        qtd++;
+                        spanQtd.textContent = qtd;
+                    };
+
+                    // Lógica para diminuir a quantidade no controle (mínimo 1)
+                    btnMenos.onclick = () => {
+                        let qtd = parseInt(spanQtd.textContent);
+                        if (qtd > 1) {
+                            qtd--;
+                            spanQtd.textContent = qtd;
+                        }
+                    };
+
+                    // Lógica para adicionar o produto ao carrinho
+                    btnAdicionar.onclick = () => {
+                        adicionarAoCarrinho(produto, parseInt(spanQtd.textContent));
+                        spanQtd.textContent = '1'; // Reseta a quantidade para 1 após adicionar
+                    };
+
+                    div.innerHTML = `
+                        <img src="${produto.imagem}" alt="${produto.nome}" />
+                        <h3>${produto.nome}</h3>
+                        <p>Preço: R$ ${produto.preco.toFixed(2)}</p>
+                    `;
+
+                    div.appendChild(controleQuantidade);
+                    div.appendChild(btnAdicionar);
+                    container.appendChild(div);
+                });
+            }
+        }
+
+        /**
+         * Cria e exibe os botões de filtro de categoria.
+         */
+        function criarFiltros() {
+            const filtrosDiv = document.getElementById('filtros');
+            filtrosDiv.innerHTML = ''; // Limpa os filtros existentes
+
+            // Botão "Todos" para exibir todos os produtos
+            const btnTodos = document.createElement('button');
+            btnTodos.textContent = 'Todos';
+            btnTodos.onclick = () => exibirProdutos();
+            filtrosDiv.appendChild(btnTodos);
+
+            // Cria um botão para cada categoria de produtos
+            for (const categoria in produtosPorCategoria) {
+                const btn = document.createElement('button');
+                btn.textContent = categoria;
+                btn.onclick = () => exibirProdutos(categoria);
+                filtrosDiv.appendChild(btn);
+            }
+        }
+
+        /* =========================================================
+           FUNÇÕES DO CARRINHO
+           Funções para adicionar itens, atualizar o display e exibir o modal.
+           ========================================================= */
+
+        /**
+         * Atualiza o display do carrinho (número de itens e total).
+         * Garante que o campo 'nome' no formulário de contato seja sempre obrigatório.
+         */
+        function atualizarCarrinho() {
+            let totalItens = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
+            let totalPreco = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+            document.getElementById('carrinho-info').textContent = `Carrinho: ${totalItens} itens | Total: R$ ${totalPreco.toFixed(2)}`;
+
+            // Obtém o campo de input 'nome' do formulário
+            const nomeInput = document.getElementById('nome');
+            const telefoneInput = document.getElementById('telefone');
+
+            // Garante que os atributos 'required' estejam sempre presentes nos campos 'nome' e 'telefone'
+            if (nomeInput) {
+                nomeInput.setAttribute('required', 'true');
+            }
+            if (telefoneInput) {
+                telefoneInput.setAttribute('required', 'true');
+            }
+        }
+
+        /**
+         * Adiciona um produto ao carrinho ou atualiza sua quantidade se já existir.
+         * @param {object} produto - O objeto do produto a ser adicionado.
+         * @param {number} quantidade - A quantidade do produto a ser adicionada.
+         */
+        function adicionarAoCarrinho(produto, quantidade) {
+            const existingItemIndex = carrinho.findIndex(p => p.nome === produto.nome);
+            if (existingItemIndex > -1) {
+                // Se o produto já existe, atualiza a quantidade
+                carrinho[existingItemIndex].quantidade += quantidade;
+                showToast(`Quantidade de ${produto.nome} atualizada para ${carrinho[existingItemIndex].quantidade} no carrinho!`);
+            } else {
+                // Se o produto não existe, adiciona-o ao carrinho
+                carrinho.push({ ...produto, quantidade: quantidade });
+                showToast(`${produto.nome} adicionado ao carrinho!`);
+            }
+            // produtosSelecionados é o array que realmente irá para o pedido
+            const produtoNoPedido = produtosSelecionados.find(p => p.nome === produto.nome);
+            if (produtoNoPedido) {
+                produtoNoPedido.quantidade += quantidade;
+            } else {
+                produtosSelecionados.push({ ...produto, quantidade: quantidade });
+            }
+            atualizarCarrinho(); // Atualiza o display do carrinho
+        }
+
+        /**
+         * Exibe o modal do carrinho com os produtos e o total.
+         */
+        function exibirCarrinho() {
+            const carrinhoOverlay = document.getElementById('carrinho-overlay');
+            const carrinhoLista = document.getElementById('carrinho-lista');
+            const carrinhoModalTotal = document.getElementById('carrinho-modal-total');
+
+            carrinhoLista.innerHTML = ''; // Limpa a lista antes de preencher
+
+            if (carrinho.length === 0) {
+                carrinhoLista.innerHTML = '<p style="text-align: center; color: #666;">Seu carrinho está vazio.</p>';
+                carrinhoModalTotal.textContent = `Total: R$ 0,00`;
+                document.querySelector('#carrinho-modal .botoes-carrinho button.limpar').style.display = 'none';
+                document.querySelector('#carrinho-modal .botoes-carrinho button:last-child').style.display = 'none'; // Esconde o botão "Comprar Produtos"
+            } else {
+                carrinho.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'item-carrinho';
+
+                    itemDiv.innerHTML = `
+                        <span>${item.nome} (${item.quantidade}x)</span>
+                        <span class="preco-item">R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
+                        <button onclick="excluirProdutoDoCarrinho(${index})">Excluir</button>
+                    `;
+                    carrinhoLista.appendChild(itemDiv);
+                });
+
+                const totalPreco = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+                carrinhoModalTotal.textContent = `Total: R$ ${totalPreco.toFixed(2)}`;
+                document.querySelector('#carrinho-modal .botoes-carrinho button.limpar').style.display = 'inline-block';
+                document.querySelector('#carrinho-modal .botoes-carrinho button:last-child').style.display = 'inline-block'; // Mostra o botão "Comprar Produtos"
+            }
+            carrinhoOverlay.style.display = 'flex'; // Exibe o overlay
+        }
+
+        /**
+         * Fecha o modal do carrinho.
+         */
+        function fecharCarrinho() {
+            document.getElementById('carrinho-overlay').style.display = 'none';
+        }
+
+        /* =========================================================
+           FUNÇÕES PARA EXCLUIR PRODUTOS DO CARRINHO
+           Função para remover itens do carrinho
+           ========================================================= */
+
+        /**
+         * Remove um produto do carrinho e atualiza as informações.
+         * @param {number} index - O índice do produto a ser removido no array do carrinho.
+         */
+        function excluirProdutoDoCarrinho(index) {
+            const itemRemovido = carrinho[index];
+            carrinho.splice(index, 1); // Remove o item do carrinho
+            
+            // Remove o produto correspondente do array de produtosSelecionados
+            const indexNoProdutosSelecionados = produtosSelecionados.findIndex(p => p.nome === itemRemovido.nome);
+            if (indexNoProdutosSelecionados > -1) {
+                produtosSelecionados.splice(indexNoProdutosSelecionados, 1);
+            }
+
+            atualizarCarrinho(); // Atualiza o display do carrinho
+            exibirCarrinho(); // Reexibe o carrinho para refletir a remoção
+        }
+
+        /**
+         * Limpa todo o carrinho.
+         */
+        function limparCarrinho() {
+            carrinho = [];
+            produtosSelecionados = [];
+            atualizarCarrinho();
+            exibirCarrinho(); // Atualiza o modal para mostrar que está vazio
+        }
+
+        /**
+         * Redireciona do modal do carrinho para o formulário de compra.
+         */
+        function comprarProdutos() {
+            fecharCarrinho(); // Fecha o modal do carrinho
+            exibirFormularioCompra(); // Abre o formulário de compra
+        }
+
+        /* =========================================================
+           FUNÇÕES DO FORMULÁRIO DE COMPRA
+           Funções para exibir, fechar e enviar o formulário de contato.
+           ========================================================= */
+
+        /**
+         * Exibe o formulário de compra (modal de contato).
+         */
+        function exibirFormularioCompra() {
+            document.getElementById('formulario-compra-overlay').style.display = 'flex';
+            // Garante que os campos de endereço estão ocultos por padrão (retirada)
+            document.getElementById('endereco-fields').style.display = 'none';
+            document.querySelector('input[name="tipoPedido"][value="retirada"]').checked = true;
+        }
+
+        /**
+         * Fecha o formulário de compra (modal de contato).
+         */
+        function fecharFormularioCompra() {
+            document.getElementById('formulario-compra-overlay').style.display = 'none';
+        }
+
+        /**
+         * Alterna a visibilidade dos campos de endereço com base na seleção de tipo de pedido.
+         */
+        function toggleEnderecoFields() {
+            const tipoPedido = document.querySelector('input[name="tipoPedido"]:checked').value;
+            const enderecoFields = document.getElementById('endereco-fields');
+            const cidadeRaioInput = document.getElementById('cidade-raio');
+            const resultadoRaioDiv = document.getElementById('resultado-raio');
+
+            if (tipoPedido === 'entrega') {
+                enderecoFields.style.display = 'block';
+                // Define os campos de endereço como obrigatórios para entrega
+                document.getElementById('endereco').setAttribute('required', 'true');
+                document.getElementById('numero').setAttribute('required', 'true');
+                document.getElementById('bairro').setAttribute('required', 'true');
+                document.getElementById('cep').setAttribute('required', 'true');
+                cidadeRaioInput.setAttribute('required', 'true'); // Cidade do raio também é obrigatória
+            } else {
+                enderecoFields.style.display = 'none';
+                // Remove o atributo 'required' para campos de endereço quando é retirada
+                document.getElementById('endereco').removeAttribute('required');
+                document.getElementById('numero').removeAttribute('required');
+                document.getElementById('bairro').removeAttribute('required');
+                document.getElementById('cep').removeAttribute('required');
+                cidadeRaioInput.removeAttribute('required'); // Cidade do raio não é obrigatória
+                resultadoRaioDiv.textContent = ''; // Limpa o resultado da verificação
+            }
+        }
+
+        /**
+         * Coleta os dados do formulário e cria uma mensagem para enviar via WhatsApp.
+         */
+        function enviarPedidoWhatsApp() {
+            const nome = document.getElementById('nome').value;
+            const email = document.getElementById('email').value;
+            const telefone = document.getElementById('telefone').value;
+            const tipoPedido = document.querySelector('input[name="tipoPedido"]:checked').value;
+            const mensagem = document.getElementById('mensagem').value;
+
+            // Validação básica dos campos obrigatórios
+            if (!nome || !telefone) {
+                showToast('Por favor, preencha seu Nome e Telefone para prosseguir com o pedido.');
+                return;
+            }
+
+            let mensagemWhatsApp = "*--- Pedido Armazém Dona Lurdes ---*\n\n";
+            mensagemWhatsApp += "*Status do Pedido: Pedido*\n\n"; // Sempre começa como "Pedido"
+
+            if (tipoPedido === 'retirada') {
+                mensagemWhatsApp += "*Tipo de Pedido: Retirada no Estabelecimento*\n";
+                mensagemWhatsApp += "_Etapas de Acompanhamento (Interno): Pedido, Separado, Pago, Retirado_\n\n";
+            } else { // Entrega
+                const endereco = document.getElementById('endereco').value;
+                const numero = document.getElementById('numero').value;
+                const bairro = document.getElementById('bairro').value;
+                const cep = document.getElementById('cep').value;
+                const cidadeRaio = document.getElementById('cidade-raio').value;
+
+
+                // Validação para entrega
+                if (!endereco || !numero || !bairro || !cep || !cidadeRaio) {
+                    showToast('Para entrega, por favor, preencha todos os campos de endereço e a cidade para verificação de área.');
+                    return;
+                }
+
+                // Simulação da verificação de raio antes de enviar o pedido
+                const cidadesNoRaio = ["loanda", "santa cruz de monte castelo", "porto rico", "nova londrina", "marilena", "diamante do norte", "guairaçá", "paranavaí", "são pedro do paraná", "planaltina do paraná", "itaúna do sul", "alto paraná", "querência do norte"]; // Cidades no raio de ~30km de Loanda (simulado)
+                const cidadeInputFormatada = cidadeRaio.toLowerCase().trim();
+
+                if (!cidadesNoRaio.includes(cidadeInputFormatada)) {
+                    // Apenas exibe a mensagem no div de resultado, sem toast flutuante
+                    document.getElementById('resultado-raio').textContent = `❌ ${cidadeRaio} está fora da nossa área de atendimento (raio de 30km de Loanda, PR).`;
+                    document.getElementById('resultado-raio').style.color = "#f44336"; // Vermelho
+                    return; // Impede o envio do pedido se a cidade estiver fora do raio
+                }
+
+
+                mensagemWhatsApp += "*Tipo de Pedido: Entrega*\n";
+                mensagemWhatsApp += `*Endereço:* ${endereco}, ${numero}, ${bairro}, ${cep}\n`;
+                mensagemWhatsApp += `*Cidade para Entrega:* ${cidadeRaio}\n`; // Adiciona a cidade informada
+                mensagemWhatsApp += "_Etapas de Acompanhamento (Interno): Pedido, Pago, Separado, Para Entrega, Entregue_\n\n";
+            }
+
+            mensagemWhatsApp += "*Itens do Pedido:*\n";
+            let totalPreco = 0;
+            // Usa produtosSelecionados para garantir que apenas itens válidos no carrinho sejam enviados
+            if (produtosSelecionados.length === 0) {
+                showToast('Seu carrinho está vazio. Por favor, adicione produtos antes de enviar o pedido.');
+                return;
+            }
+
+            produtosSelecionados.forEach(item => {
+                mensagemWhatsApp += `- ${item.nome} (${item.quantidade}x) - R$ ${(item.preco * item.quantidade).toFixed(2)}\n`;
+                totalPreco += (item.preco * item.quantidade);
+            });
+            mensagemWhatsApp += `*Total do Pedido: R$ ${totalPreco.toFixed(2)}*\n\n`;
+
+            mensagemWhatsApp += "*Dados do Cliente:*\n";
+            mensagemWhatsApp += `*Nome:* ${nome}\n`;
+            mensagemWhatsApp += `*Telefone:* ${telefone}\n`;
+            if (email) {
+                mensagemWhatsApp += `*Email:* ${email}\n`;
+            }
+            if (mensagem) {
+                mensagemWhatsApp += `*Observações:* ${mensagem}\n`;
+            }
+
+            // Número de telefone para o WhatsApp (substitua pelo número desejado)
+            const numeroWhatsApp = '5543933001899'; // Exemplo: Código do país + DDD + Número
+            const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagemWhatsApp)}`;
+            window.open(urlWhatsApp, '_blank'); // Abre o WhatsApp em uma nova aba
+
+            // Limpa o carrinho e os produtos selecionados após o envio do pedido
+            carrinho = [];
+            produtosSelecionados = [];
+            atualizarCarrinho(); // Atualiza o display do carrinho
+            fecharFormularioCompra(); // Oculta o formulário após o envio
+            showToast("Seu pedido foi enviado! A Dona Lurdes já está verificando."); // Mensagem de toast alterada
+        }
+
+        /**
+         * Exibe uma notificação temporária (toast).
+         * @param {string} message - A mensagem a ser exibida no toast.
+         */
+        function showToast(message) {
+            let toast = document.getElementById('toast-notification');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast-notification';
+                toast.className = 'toast-notification';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000); // O toast desaparece após 3 segundos
+        }
+
+        /**
+         * Verifica se a cidade inserida está dentro do raio de atendimento simulado.
+         */
+        function verificarRaioAtendimento() {
+            const cidadeInput = document.getElementById('cidade-raio').value;
+            const resultadoDiv = document.getElementById('resultado-raio');
+            const cidadesNoRaio = [
+                "loanda", "santa cruz de monte castelo", "porto rico", "nova londrina", 
+                "marilena", "diamante do norte", "guairaçá", "paranavaí", "são pedro do paraná",
+                "planaltina do paraná", "itaúna do sul", "alto paraná", "querência do norte"
+            ]; // Lista de cidades no raio de ~30km de Loanda (simulado)
+
+            const cidadeFormatada = cidadeInput.toLowerCase().trim();
+
+            if (cidadeFormatada === "") {
+                resultadoDiv.textContent = "Por favor, digite uma cidade.";
+                resultadoDiv.style.color = "#f44336"; // Vermelho para erro
+                return;
+            }
+
+            if (cidadesNoRaio.includes(cidadeFormatada)) {
+                resultadoDiv.textContent = `✅ ${cidadeInput} está dentro da área de atendimento!`;
+                resultadoDiv.style.color = "#4CAF50"; // Verde
+                showToast(`Sua cidade (${cidadeInput}) está dentro da área de atendimento!`);
+            } else {
+                resultadoDiv.textContent = `❌ ${cidadeInput} está fora da área de atendimento (raio de 30km de Loanda, PR).`;
+                resultadoDiv.style.color = "#f44336"; // Vermelho
+            }
+        }
+
+        /* =========================================================
+           FUNÇÕES DO FORMULÁRIO DE CADASTRO/LOGIN (NOVO)
+           Funções para exibir, fechar e processar o formulário de cadastro/login.
+           ========================================================= */
+
+        /**
+         * Exibe o modal de cadastro/login.
+         */
+        function exibirCadastro() {
+            document.getElementById('cadastro-overlay').style.display = 'flex';
+            // Garante que o formulário de login seja o primeiro a aparecer
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-message').textContent = '';
+            document.getElementById('register-message').textContent = '';
+        }
+
+        function exibirformulario() {
+              const carrinhoOverlay = document.getElementById('formulario-overlay');
+        }
+        
+        /**
+         * Fecha o modal de cadastro/login.
+         */
+        function fecharCadastro() {
+            document.getElementById('cadastro-overlay').style.display = 'none';
+            // Opcional: limpar os campos do formulário ao fechar
+            document.getElementById('loginForm').reset();
+            document.getElementById('registerForm').reset();
+            document.getElementById('login-message').textContent = '';
+            document.getElementById('register-message').textContent = '';
+        }
+
+        // Lógica de alternância e envio dos formulários de Login e Cadastro
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginFormDiv = document.getElementById('login-form');
+            const registerFormDiv = document.getElementById('register-form');
+            const showRegisterLink = document.getElementById('show-register');
+            const showLoginLink = document.getElementById('show-login');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginMessage = document.getElementById('login-message');
+            const registerMessage = document.getElementById('register-message');
+
+            // Exibe o formulário de cadastro
+            if (showRegisterLink) { // Verifica se o elemento existe
+                showRegisterLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    loginFormDiv.style.display = 'none';
+                    registerFormDiv.style.display = 'block';
+                    loginMessage.textContent = ''; // Limpa mensagens
+                    registerMessage.textContent = '';
+                });
+            }
+
+            // Exibe o formulário de login
+            if (showLoginLink) { // Verifica se o elemento existe
+                showLoginLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    registerFormDiv.style.display = 'none';
+                    loginFormDiv.style.display = 'block';
+                    loginMessage.textContent = ''; // Limpa mensagens
+                    registerMessage.textContent = '';
+                });
+            }
+
+            // Lógica de envio do formulário de Login (simulado)
+            if (loginForm) { // Verifica se o formulário existe
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    loginMessage.textContent = 'Enviando dados de login...';
+                    loginMessage.className = ''; // Limpa classes de estilo
+                    const username = loginForm.elements['login-username'].value;
+                    const password = loginForm.elements['login-password'].value;
+
+                    // Simulação de resposta do servidor
+                    setTimeout(() => {
+                        if (username === 'teste@example.com' && password === 'senha123') { // Credenciais de exemplo
+                            loginMessage.className = 'success';
+                            loginMessage.textContent = 'Login bem-sucedido! Redirecionando...';
+                            
+                            //teste Paula
+                            // Redireciona para a página "minha_pagina.html"
+                            //window.location.href = "formulario.html";
+                            // fecharCadastro(); // Fecha o modal após o login bem-sucedido
+                        
+                        } else {
+                            loginMessage.className = 'error';
+                            loginMessage.textContent = 'Falha no login. Verifique suas credenciais.';
+                        }
+                    }, 1000); // Simula um atraso de rede
+                });
+            }
+
+
+            // Lógica de envio do formulário de Cadastro (simulado)
+            if (registerForm) { // Verifica se o formulário existe
+                registerForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    registerMessage.textContent = 'Enviando dados de cadastro...';
+                    registerMessage.className = ''; // Limpa classes de estilo
+                    const firstname = registerForm.elements['register-firstname'].value;
+                    const tel = registerForm.elements['register-tel'].value;
+                    const email = registerForm.elements['register-email'].value;
+                    const city = registerForm.elements['register-city'].value;
+                    const password = registerForm.elements['register-password'].value;
+                    const confirmPassword = registerForm.elements['register-confirm-password'].value;
+
+                    if (password !== confirmPassword) {
+                        registerMessage.className = 'error';
+                        registerMessage.textContent = 'As senhas não coincidem!';
+                        return;
+                    }
+                    if (password.length < 6) {
+                        registerMessage.className = 'error';
+                        registerMessage.textContent = 'A senha deve ter pelo menos 6 dígitos.';
+                        return;
+                    }
+
+                    // Simulação de resposta do servidor
+                    setTimeout(() => {
+                        registerMessage.className = 'success';
+                        registerMessage.textContent = 'Cadastro realizado com sucesso! Você pode fazer login agora.';
+                        // Opcionalmente, volta para o formulário de login após o cadastro
+                        setTimeout(() => {
+                            if (showLoginLink) showLoginLink.click();
+                        }, 2000);
+                    }, 1000); // Simula um atraso de rede
+                });
+            }
+        });
+
+
+        /* =========================================================
+           INICIALIZAÇÃO
+           Chamadas das funções para iniciar a página
+           ========================================================= */
+        criarFiltros(); // Cria os botões de filtro de categoria
+        exibirProdutos(); // Exibe todos os produtos inicialmente
+        atualizarCarrinho(); // Garante que o estado inicial do carrinho e formulário esteja correto
+    </script>
+</body>
+</html>

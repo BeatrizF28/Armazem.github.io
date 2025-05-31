@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Pedidos e Produtos - Armazém da Dona Lurdes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos globais e de estrutura */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f8f8;
+            color: #333;
+        }
+
+        /* Cabeçalho */
+        header {
+            background-color: #558b2f; /* Verde escuro */
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        /* Container principal do painel */
+        main {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 30px auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #558b2f;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 700; /* font-bold */
+        }
+
+        /* Seleção de tipo de seção (Pedidos, Gerenciamento) */
+        .tipo-secao-selecao {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap; /* Para responsividade */
+        }
+
+        .tipo-secao-selecao button {
+            background-color: #aed581; /* Verde claro */
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #33691e; /* Verde muito escuro */
+            font-weight: 600; /* font-semibold */
+            font-size: 1.1rem;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .tipo-secao-selecao button:hover {
+            background-color: #9ccc65; /* Verde um pouco mais escuro no hover */
+            transform: translateY(-2px);
+        }
+
+        .tipo-secao-selecao button.active {
+            background-color: #558b2f; /* Verde escuro */
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Seções de conteúdo (Pedidos, Gerenciamento de Produtos) */
+        .secao-conteudo {
+            display: none; /* Esconde por padrão, JS vai mostrar */
+        }
+
+        .secao-conteudo.active {
+            display: block;
+        }
+
+        /* Estilos para as seções de Pedidos (Retirada e Entrega) */
+        .lista-pedidos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .coluna-status {
+            background-color: #f1f8e9; /* Verde muito claro */
+            border-radius: 10px;
+            padding: 1.5rem;
+            min-height: 300px;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+            border: 1px solid #dcedc8; /* Borda suave */
+        }
+
+        .coluna-status h3 {
+            color: #33691e; /* Verde muito escuro */
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #c5e1a5; /* Linha divisória */
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Cartão de pedido individual */
+        .cartao-pedido {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 1.2rem;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .cartao-pedido:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+        }
+
+        .cartao-pedido p {
+            margin: 0.5rem 0;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .cartao-pedido strong {
+            color: #558b2f;
+            font-weight: 600;
+        }
+
+        /* Botão WhatsApp */
+        .cartao-pedido .btn-whatsapp {
+            display: inline-flex; /* Para alinhar ícone e texto se houver */
+            align-items: center;
+            justify-content: center;
+            background-color: #25d366; /* Cor do WhatsApp */
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .cartao-pedido .btn-whatsapp:hover {
+            background-color: #128c7e; /* Verde mais escuro do WhatsApp */
+            transform: translateY(-1px);
+        }
+
+        /* Controles de status (botões de avançar/retroceder) */
+        .cartao-pedido .controles-status {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.2rem;
+            gap: 0.75rem;
+            flex-wrap: wrap; /* Para responsividade */
+        }
+
+        .cartao-pedido .controles-status button {
+            flex: 1; /* Para ocupar o espaço disponível */
+            padding: 0.6rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            min-width: 100px; /* Garante que o botão não fique muito pequeno */
+        }
+
+        .cartao-pedido .controles-status button:active {
+            transform: translateY(1px);
+            box-shadow: none;
+        }
+
+        /* Cores dos botões de ação */
+        .cartao-pedido .controles-status .btn-proximo {
+            background-color: #8bc34a; /* Verde médio */
+            color: white;
+        }
+        .cartao-pedido .controles-status .btn-proximo:hover {
+            background-color: #7cb342;
+        }
+
+        .cartao-pedido .controles-status .btn-anterior {
+            background-color: #ffb74d; /* Laranja suave */
+            color: white;
+        }
+        .cartao-pedido .controles-status .btn-anterior:hover {
+            background-color: #ffa726;
+        }
+
+        .btn-concluir {
+            background-color: #4CAF50; /* Verde de sucesso */
+            color: white;
+        }
+        .btn-concluir:hover {
+            background-color: #43A047;
+        }
+
+        .btn-cancelar {
+            background-color: #ef5350; /* Vermelho de erro */
+            color: white;
+        }
+        .btn-cancelar:hover {
+            background-color: #e53935;
+        }
+
+        /* Estilos para a seção de gerenciamento de produtos */
+        #secaoGerenciarProdutos {
+            padding: 1.5rem;
+            background-color: #f1f8e9;
+            border-radius: 10px;
+            border: 1px solid #dcedc8;
+        }
+
+        #secaoGerenciarProdutos h3 {
+            color: #33691e;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #c5e1a5;
+        }
+
+        .form-adicionar-produto {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            align-items: center;
+        }
+
+        .form-adicionar-produto input[type="text"],
+        .form-adicionar-produto input[type="number"] {
+            flex: 1; /* Ocupa espaço disponível */
+            padding: 0.8rem;
+            border: 1px solid #dcedc8;
+            border-radius: 6px;
+            font-size: 1rem;
+            min-width: 150px; /* Garante que não fique muito pequeno */
+        }
+
+        .form-adicionar-produto button {
+            background-color: #8bc34a;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-adicionar-produto button:hover {
+            background-color: #7cb342;
+            transform: translateY(-1px);
+        }
+
+        .lista-produtos-gerenciar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .produto-gerenciar-item {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .produto-gerenciar-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .produto-gerenciar-item img {
+            max-width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            border: 1px solid #eee;
+        }
+
+        .produto-gerenciar-item .produto-info {
+            flex-grow: 1; /* Permite que ocupe o espaço */
+            margin-bottom: 0.8rem;
+        }
+
+        .produto-gerenciar-item h4 {
+            margin: 0.5rem 0;
+            color: #558b2f;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .produto-gerenciar-item p {
+            margin: 0;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .produto-gerenciar-item .status-estoque {
+            font-weight: bold;
+            margin-top: 0.5rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .produto-gerenciar-item .status-estoque.disponivel {
+            background-color: #e8f5e9; /* Verde claro para disponível */
+            color: #388e3c; /* Verde escuro para disponível */
+        }
+
+        .produto-gerenciar-item .status-estoque.esgotado {
+            background-color: #ffe0b2; /* Laranja claro para esgotado */
+            color: #ef6c00; /* Laranja escuro para esgotado */
+        }
+
+        .produto-gerenciar-item .controles-gerenciamento {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .produto-gerenciar-item .controles-gerenciamento button {
+            flex: 1;
+            padding: 0.6rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .produto-gerenciar-item .controles-gerenciamento .btn-toggle-estoque {
+            background-color: #64b5f6; /* Azul para alternar estoque */
+            color: white;
+        }
+
+        .produto-gerenciar-item .controles-gerenciamento .btn-toggle-estoque:hover {
+            background-color: #42a5f5;
+        }
+
+        .produto-gerenciar-item .controles-gerenciamento .btn-deletar {
+            background-color: #ef5350; /* Vermelho */
+            color: white;
+        }
+
+        .produto-gerenciar-item .controles-gerenciamento .btn-deletar:hover {
+            background-color: #e53935;
+        }
+
+
+        /* =========================================================
+           FORMULÁRIO DE COMPRA / MODAL GERAL
+           Estilos para o overlay e o modal do formulário de contato
+           ========================================================= */
+        #formulario-compra-overlay, #carrinho-overlay {
+            display: none; /* Inicialmente escondido */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        #formulario-compra-modal, #carrinho-modal {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 550px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        #formulario-compra-modal h2, #carrinho-modal h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #33691e;
+            font-size: 1.8rem;
+        }
+
+        #formulario-compra-modal label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #33691e;
+            font-size: 1rem;
+        }
+
+        #formulario-compra-modal input[type="text"],
+        #formulario-compra-modal input[type="email"],
+        #formulario-compra-modal textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        #formulario-compra-modal textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        #formulario-compra-modal .radio-group {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        #formulario-compra-modal .radio-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+
+        #formulario-compra-modal .radio-group input[type="radio"] {
+            margin-right: 8px;
+            width: auto; /* Override default input[type=text] width */
+            margin-bottom: 0;
+        }
+
+        #formulario-compra-modal button[type="button"] {
+            background-color: #25d366; /* Cor do WhatsApp */
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        #formulario-compra-modal button[type="button"]:hover {
+            background-color: #1e8e49;
+        }
+
+        .fechar-formulario, .fechar-carrinho {
+            background-color: transparent;
+            color: #777;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            transition: color 0.2s ease;
+        }
+        .fechar-formulario:hover, .fechar-carrinho:hover {
+            color: #000;
+        }
+
+        /* Estilos do Modal do Carrinho */
+        #carrinho-modal .item-carrinho {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+            color: #444;
+        }
+        #carrinho-modal .item-carrinho:last-child {
+            border-bottom: none;
+        }
+        #carrinho-modal .item-carrinho span {
+            flex-grow: 1;
+        }
+        #carrinho-modal .item-carrinho .preco-item {
+            font-weight: bold;
+            color: #33691e;
+            width: 80px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        #carrinho-modal .item-carrinho button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background-color 0.3s ease;
+        }
+        #carrinho-modal .item-carrinho button:hover {
+            background-color: #d32f2f;
+        }
+
+        #carrinho-modal .total-carrinho {
+            margin-top: 20px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #33691e;
+            border-top: 2px solid #dcedc8;
+            padding-top: 15px;
+        }
+
+        #carrinho-modal .botoes-carrinho {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        #carrinho-modal .botoes-carrinho button {
+            background-color: #25d366; /* Cor do WhatsApp */
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        #carrinho-modal .botoes-carrinho button.limpar {
+            background-color: #f44336;
+        }
+        #carrinho-modal .botoes-carrinho button:hover {
+            background-color: #1e8e49;
+        }
+        #carrinho-modal .botoes-carrinho button.limpar:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Estilos para a notificação de "toast" */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1002;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .toast-notification.show {
+            opacity: 1;
+        }
+
+        /* Responsividade */
+        @media (max-width: 1024px) {
+            .lista-pedidos {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+            #secaoGerenciarProdutos .lista-produtos-gerenciar {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+                margin: 15px auto;
+            }
+            h2 {
+                font-size: 1.75rem; /* text-3xl */
+            }
+            .lista-pedidos {
+                grid-template-columns: 1fr; /* Uma coluna em telas menores */
+            }
+            .tipo-secao-selecao {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .tipo-secao-selecao button {
+                width: 100%;
+                padding: 0.7rem 1.5rem;
+            }
+            .coluna-status {
+                padding: 1rem;
+            }
+            .cartao-pedido .controles-status {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .cartao-pedido .controles-status button {
+                width: 100%;
+            }
+            .form-adicionar-produto {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .form-adicionar-produto input,
+            .form-adicionar-produto button {
+                width: 100%;
+                min-width: unset;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Armazém da Dona Lurdes</h1>
+        <p>Gerenciamento de Pedidos e Catálogo de Produtos</p>
+    </header>
+
+    <main>
+        <h2>Painel de Gerenciamento</h2>
+
+        <div class="tipo-secao-selecao">
+            <button id="btnRetirada" class="active">Pedidos para Retirada</button>
+            <button id="btnEntrega">Pedidos para Entrega</button>
+            <button id="btnGerenciarProdutos">Gerenciar Produtos</button>
+        </div>
+
+        <div id="secaoRetirada" class="secao-conteudo active">
+            <div class="lista-pedidos">
+                <div class="coluna-status" id="retirada-pedido">
+                    <h3>Pedido (Recebido)</h3>
+                    <div class="cartao-pedido" data-id="ret1">
+                        <p>Cliente: <strong>João Silva</strong></p>
+                        <p>Pedido: 3x Pão Artesanal, 1kg Queijo Minas</p>
+                        <p>Total: <strong>R$ 45,00</strong></p>
+                        <a href="https://wa.me/5511987654321?text=Ol%C3%A1%20Jo%C3%A3o%2C%20seu%20pedido%20%23ret1%20est%C3%A1%20sendo%20processado%20no%20Armaz%C3%A9m%20da%20Dona%20Lurdes." target="_blank" class="btn-whatsapp">
+                            Abrir WhatsApp
+                        </a>
+                        <div class="controles-status">
+                            <button class="btn-proximo" onclick="avancarStatus('ret1', 'retirada')">Separar</button>
+                        </div>
+                    </div>
+                    <div class="cartao-pedido" data-id="ret2">
+                        <p>Cliente: <strong>Maria Oliveira</strong></p>
+                        <p>Pedido: 2L Leite Fresco, 500g Café Moído</p>
+                        <p>Total: <strong>R$ 32,50</strong></p>
+                        <a href="https://wa.me/5511998765432?text=Ol%C3%A1%20Maria%2C%20seu%20pedido%20%23ret2%20est%C3%A1%20sendo%20processado%20no%20Armaz%C3%A9m%20da%20Dona%20Lurdes." target="_blank" class="btn-whatsapp">
+                            Abrir WhatsApp
+                        </a>
+                        <div class="controles-status">
+                            <button class="btn-proximo" onclick="avancarStatus('ret2', 'retirada')">Separar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="coluna-status" id="retirada-separado">
+                    <h3>Separado</h3>
+                </div>
+
+                <div class="coluna-status" id="retirada-pago">
+                    <h3>Pago</h3>
+                </div>
+
+                <div class="coluna-status" id="retirada-retirado">
+                    <h3>Retirado</h3>
+                </div>
+            </div>
+        </div>
+
+        <div id="secaoEntrega" class="secao-conteudo">
+            <div class="lista-pedidos">
+                <div class="coluna-status" id="entrega-pedido">
+                    <h3>Pedido (Recebido)</h3>
+                    <div class="cartao-pedido" data-id="ent1">
+                        <p>Cliente: <strong>Carlos Souza</strong></p>
+                        <p>Endereço: Rua das Flores, 123, Bairro Jardim</p>
+                        <p>Pedido: 1 Bandeja Ovos Caipira, 1kg Arroz Integral</p>
+                        <p>Total: <strong>R$ 58,00</strong></p>
+                        <a href="https://wa.me/5511912345678?text=Ol%C3%A1%20Carlos%2C%20seu%20pedido%20%23ent1%20est%C3%A1%20sendo%20processado%20no%20Armaz%C3%A9m%20da%20Dona%20Lurdes." target="_blank" class="btn-whatsapp">
+                            Abrir WhatsApp
+                        </a>
+                        <div class="controles-status">
+                            <button class="btn-proximo" onclick="avancarStatus('ent1', 'entrega')">Pagar</button>
+                        </div>
+                    </div>
+                    <div class="cartao-pedido" data-id="ent2">
+                        <p>Cliente: <strong>Ana Costa</strong></p>
+                        <p>Endereço: Av. Principal, 456, Centro</p>
+                        <p>Pedido: 500g Granola, 1x Geleia Artesanal</p>
+                        <p>Total: <strong>R$ 40,00</strong></p>
+                        <a href="https://wa.me/5511923456789?text=Ol%C3%A1%20Ana%2C%20seu%20pedido%20%23ent2%20est%C3%A1%20sendo%20processado%20no%20Armaz%C3%A9m%20da%20Dona%20Lurdes." target="_blank" class="btn-whatsapp">
+                            Abrir WhatsApp
+                        </a>
+                        <div class="controles-status">
+                            <button class="btn-proximo" onclick="avancarStatus('ent2', 'entrega')">Pagar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="coluna-status" id="entrega-pago">
+                    <h3>Pago</h3>
+                </div>
+
+                <div class="coluna-status" id="entrega-separado">
+                    <h3>Separado</h3>
+                </div>
+
+                <div class="coluna-status" id="entrega-para-entrega">
+                    <h3>Para Entrega</h3>
+                </div>
+
+                <div class="coluna-status" id="entrega-entregue">
+                    <h3>Entregue</h3>
+                </div>
+            </div>
+        </div>
+
+        <div id="secaoGerenciarProdutos" class="secao-conteudo">
+            <h3>Gerenciar Produtos do Catálogo</h3>
+            <div class="form-adicionar-produto">
+                <input type="text" id="produtoNome" placeholder="Nome do Produto" />
+                <input type="number" id="produtoPreco" placeholder="Preço (R$)" step="0.01" />
+                <input type="text" id="produtoCategoria" placeholder="Categoria (ex: Laticínios)" />
+                <input type="text" id="produtoImagem" placeholder="URL da Imagem (opcional)" />
+                <button onclick="adicionarProduto()">Adicionar Produto</button>
+            </div>
+            <div class="lista-produtos-gerenciar" id="listaProdutosGerenciar">
+                </div>
+        </div>
+    </main>
+
+    <div id="carrinho-overlay">
+        <div id="carrinho-modal">
+            <button class="fechar-carrinho" onclick="fecharCarrinho()">X</button>
+            <h2>Seu Carrinho</h2>
+            <div id="carrinho-lista">
+                </div>
+            <div class="total-carrinho" id="carrinho-modal-total">
+                </div>
+            <div class="botoes-carrinho">
+                <button class="limpar" onclick="limparCarrinho()">Limpar Carrinho</button>
+                <button onclick="comprarProdutos()">Criar Pedido WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="formulario-compra-overlay">
+        <div id="formulario-compra-modal">
+            <button class="fechar-formulario" onclick="fecharFormularioCompra()">X</button>
+            <h2>Dados para Contato e Pedido</h2>
+            <form id="formulario-compra">
+                <label for="nome">Nome:</label>
+                <input type="text" id="nome" name="nome" required>
+
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email">
+
+                <label for="telefone">Telefone:</label>
+                <input type="text" id="telefone" name="telefone" required>
+
+                <label>Tipo de Pedido:</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="tipoPedido" value="retirada" checked onchange="toggleEnderecoFields()"> Retirada no Estabelecimento
+                    </label>
+                    <label>
+                        <input type="radio" name="tipoPedido" value="entrega" onchange="toggleEnderecoFields()"> Para Entrega
+                    </label>
+                </div>
+
+                <div id="endereco-fields" style="display: none;">
+                    <label for="endereco">Endereço:</label>
+                    <input type="text" id="endereco" name="endereco">
+
+                    <label for="numero">Número:</label>
+                    <input type="text" id="numero" name="numero">
+
+                    <label for="bairro">Bairro:</label>
+                    <input type="text" id="bairro" name="bairro">
+
+                    <label for="cep">CEP:</label>
+                    <input type="text" id="cep" name="cep">
+                </div>
+
+                <label for="mensagem">Observações (opcional):</label>
+                <textarea id="mensagem" name="mensagem" rows="4"></textarea>
+
+                <button type="button" onclick="enviarPedidoWhatsApp()">Enviar Pedido</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-notification" class="toast-notification"></div>
+
+    <script>
+        // Define a ordem dos status para cada tipo de pedido
+        const statusRetirada = ['retirada-pedido', 'retirada-separado', 'retirada-pago', 'retirada-retirado'];
+        const statusEntrega = ['entrega-pedido', 'entrega-pago', 'entrega-separado', 'entrega-para-entrega', 'entrega-entregue'];
+
+        // Dados de produtos (lista única que alimenta o gerenciamento)
+        // Adicionada a propriedade 'isOutOfStock' para cada produto
+        let produtos = [
+            { id: 'prod1', nome: 'Maçã', preco: 1.0, categoria: 'Frutas', imagem: 'https://www.vortexmag.net/wp-content/uploads/2020/02/apples3-big.jpg', isOutOfStock: false },
+            { id: 'prod2', nome: 'Banana', preco: 6.0, categoria: 'Frutas', imagem: 'https://th.bing.com/th/id/OIP.iFm2DffdX5eMg2LjmcRovQHaEK?w=321&h=181&c=7&r=0&o=5&dpr=1.3&pid=1.7', isOutOfStock: false },
+            { id: 'prod3', nome: 'Laranja', preco: 2.0, categoria: 'Frutas', imagem: 'https://www.mundoboaforma.com.br/wp-content/uploads/2016/02/laranja-no-jardim.jpg', isOutOfStock: false },
+            { id: 'prod4', nome: 'Pera', preco: 3.2, categoria: 'Frutas', imagem: 'https://th.bing.com/th/id/OIP.hRko0yZKYSB9z3p_t8-oRwHaE7?w=294&h=196&c=7&r=0&o=5&dpr=1.3&pid=1.7', isOutOfStock: false },
+            { id: 'prod5', nome: 'Uva', preco: 2.0, categoria: 'Frutas', imagem: 'https://hips.hearstapps.com/ghk.h-cdn.co/assets/17/50/1513015699-red-green-grapes.jpg', isOutOfStock: false },
+            { id: 'prod6', nome: 'Melancia', preco: 50.0, categoria: 'Frutas', imagem: 'https://img-21.ccm2.net/xQsG1nfqxhxYg9n9I_bc_F_XJAk=/cd169fee2b044bfd82a9c43909c3e56f/ccm-faq/1179706.jpg', isOutOfStock: false },
+            { id: 'prod7', nome: 'Mamão', preco: 6.0, categoria: 'Frutas', imagem: 'https://folhago.com.br/blogs/almanaque/wp-content/uploads/2022/05/Conheca-6-poderosos-nutrientes-do-mamao-e-porque-voc-deve-comecar-a-comer-foto-Canva-2.jpg', isOutOfStock: false },
+            { id: 'prod8', nome: 'Abacaxi', preco: 8.0, categoria: 'Frutas', imagem: 'https://www.curapelanatureza.com.br/wp-content/uploads/2019/09/abacaxi-remedio.jpg', isOutOfStock: false },
+            { id: 'prod9', nome: 'Manga', preco: 4.0, categoria: 'Frutas', imagem: 'https://s4.static.brasilescola.uol.com.br/be/2022/01/manga.jpg', isOutOfStock: false },
+            { id: 'prod10', nome: 'Kiwi', preco: 3.5, categoria: 'Frutas', imagem: 'https://th.bing.com/th/id/OIP.bzwz_a-JPbac4S7Mte3PNgHaEK?w=1200&h=675&rs=1&pid=ImgDetMain', isOutOfStock: false },
+            { id: 'prod11', nome: 'Batata', preco: 1.0, categoria: 'Legumes', imagem: 'https://th.bing.com/th/id/OIP.WLKplkBUUG9ebRzQKeXdRgHaE8?rs=1&pid=ImgDetMain', isOutOfStock: false },
+            { id: 'prod12', nome: 'Cenoura', preco: 1.0, categoria: 'Legumes', imagem: 'https://revistacampoenegocios.com.br/wp-content/uploads/2021/11/Cenoura.jpg', isOutOfStock: false },
+            { id: 'prod13', nome: 'Beterraba', preco: 2.2, categoria: 'Legumes', imagem: 'https://www.proveitoso.com/wp-content/uploads/2021/07/11765-768x542.jpg', isOutOfStock: false },
+            { id: 'prod14', nome: 'Abóbora', preco: 2.8, categoria: 'Legumes', imagem: 'https://cdn.deliway.com.br/blog/base/3d5/04d/0c8/abobora-paulista.jpg', isOutOfStock: false },
+            { id: 'prod15', nome: 'Chuchu', preco: 2.0, categoria: 'Legumes', imagem: 'https://frutasyverduras.info/wp-content/uploads/2019/07/chayote.jpg', isOutOfStock: false },
+            { id: 'prod16', nome: 'Mandioca', preco: 4.8, categoria: 'Legumes', imagem: 'https://www.cfn.org.br/wp-content/uploads/2015/07/Mandioca_Foto_Fernanda_Birolo-compressed-770x500.jpg', isOutOfStock: false },
+            { id: 'prod17', nome: 'Pepino', preco: 2.2, categoria: 'Legumes', imagem: 'https://herograespeciales.com/wp-content/uploads/2019/11/shutterstock_724777696-pepinos-scaled.jpg', isOutOfStock: false },
+            { id: 'prod18', nome: 'Jiló', preco: 3.0, categoria: 'Legumes', imagem: 'https://th.bing.com/th/id/OIP.pfPKjXJbLFIh37MRkQFJPQHaFl?rs=1&pid=ImgDetMain', isOutOfStock: false },
+            { id: 'prod19', nome: 'Repolho', preco: 3.5, categoria: 'Hortaliças', imagem: 'https://segredosdacomida.com.br/wp-content/uploads/2021/11/receitas-com-repolho.jpg', isOutOfStock: false },
+            { id: 'prod20', nome: 'Alface', preco: 3.5, categoria: 'Hortaliças', imagem: 'https://http2.mlstatic.com/D_NQ_NP_700903-MLB44435475011_122020-F.jpg', isOutOfStock: false },
+            { id: 'prod21', nome: 'Rúcula', preco: 4.2, categoria: 'Hortaliças', imagem: 'https://tribunadejundiai.com.br/wp-content/uploads/2022/06/Descubra-quais-sao-os-beneficios-da-rucula-para-sua-saude-1024x576.jpg', isOutOfStock: false },
+            { id: 'prod22', nome: 'Salsinha', preco: 1.9, categoria: 'Hortaliças', imagem: 'https://capitalist.com.br/wp-content/uploads/2022/08/salsa-1000x600.jpg', isOutOfStock: false },
+            { id: 'prod23', nome: 'Cebolinha', preco: 1.7, categoria: 'Hortaliças', imagem: 'https://foodwissen.de/wp-content/uploads/2023/03/schnittlauch-im-bund-auf-einem-holzbrett-800x525.jpg', isOutOfStock: false },
+            { id: 'prod24', nome: 'Couve', preco: 4.6, categoria: 'Hortaliças', imagem: 'https://casaeconstrucao.org/wp-content/uploads/2022/04/2-beneficios-da-couve-para-a-saude.jpg', isOutOfStock: false },
+            { id: 'prod25', nome: 'Pepino em Conserva', preco: 10.0, categoria: 'Conservas e Outros', imagem: 'https://t1.uc.ltmcdn.com/pt/posts/6/6/1/como_fazer_pepino_em_conserva_15166_orig.jpg', isOutOfStock: false },
+            { id: 'prod26', nome: 'Geleia de Morango', preco: 15.0, categoria: 'Conservas e Outros', imagem: 'https://ais.kochbar.de/kbrezept/516033_903659/1200x1200/himbeer-curd-rezept-bild-nr-11.jpg', isOutOfStock: false },
+            { id: 'prod27', nome: 'Queijo', preco: 7.0, categoria: 'Conservas e Outros', imagem: 'https://epices-review.fr/wp-content/uploads/2020/10/Par-quoi-remplacer-le-queso-fresco.jpg', isOutOfStock: false },
+            { id: 'prod28', nome: 'Farinha de Mandioca', preco: 12.5, categoria: 'Conservas e Outros', imagem: 'https://img.freepik.com/fotos-premium/farinha-de-mandioca-na-tigela_434193-5532.jpg', isOutOfStock: false },
+            { id: 'prod29', nome: 'Cesto Trançado', preco: 58.0, categoria: 'Artesanato', imagem: 'https://img.elo7.com.br/product/zoom/27BD65E/conjunto-de-cestos-trancados.jpg', isOutOfStock: false },
+            { id: 'prod30', nome: 'Tapete de Crochê', preco: 40.0, categoria: 'Artesanato', imagem: 'https://www.katiaribeiro.com.br/wp-content/uploads/2023/04/GridArt_20230413_211456469.jpg', isOutOfStock: false },
+            { id: 'prod31', nome: 'Boneca de Pano', preco: 35.0, categoria: 'Artesanato', imagem: 'https://placehold.co/150x100/f1f8e9/33691e?text=Boneca', isOutOfStock: true } // Exemplo de produto esgotado
+        ];
+        let nextProductId = produtos.length + 1; // Para gerar IDs únicos para novos produtos
+
+        // Arrays para gerenciar o carrinho de compras e produtos selecionados para o pedido
+        let carrinho = []; // Armazena os itens que estão no carrinho com suas quantidades
+        let produtosSelecionadosParaPedido = []; // Armazena os produtos que foram adicionados para o pedido final
+
+        /* =========================================================
+           FUNÇÕES DE NAVEGAÇÃO ENTRE SEÇÕES
+           ========================================================= */
+
+        /**
+         * Ativa a seção de conteúdo especificada e desativa as outras.
+         * @param {string} sectionId - O ID da seção a ser ativada (ex: 'secaoRetirada', 'secaoGerenciarProdutos').
+         */
+        function setActiveSection(sectionId) {
+            // Esconde todas as seções de conteúdo
+            document.querySelectorAll('.secao-conteudo').forEach(section => {
+                section.classList.remove('active');
+            });
+            // Desativa todos os botões de seleção de seção
+            document.querySelectorAll('.tipo-secao-selecao button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Ativa a seção e o botão correspondente
+            document.getElementById(sectionId).classList.add('active');
+            document.getElementById(`btn${sectionId.replace('secao', '')}`).classList.add('active');
+
+            // Ações específicas ao ativar certas seções
+            if (sectionId === 'secaoGerenciarProdutos') {
+                renderizarProdutosGerenciar(); // Renderiza a lista de produtos para gerenciamento
+            }
+            // Para as seções de pedidos (retirada/entrega), não há necessidade de renderização inicial aqui,
+            // pois os cartões são movidos entre as colunas.
+        }
+
+        // Adiciona listeners para os botões de seleção de seção
+        document.getElementById('btnRetirada').addEventListener('click', () => setActiveSection('secaoRetirada'));
+        document.getElementById('btnEntrega').addEventListener('click', () => setActiveSection('secaoEntrega'));
+        document.getElementById('btnGerenciarProdutos').addEventListener('click', () => setActiveSection('secaoGerenciarProdutos'));
+
+
+        /* =========================================================
+           FUNÇÕES DO CARRINHO (AGORA MAIS PARA CRIAÇÃO DE PEDIDOS INTERNOS)
+           ========================================================= */
+
+        /**
+         * Adiciona um produto ao carrinho ou atualiza sua quantidade se já existir.
+         * Esta função ainda é usada para simular a adição de produtos a um novo pedido.
+         * @param {object} produto - O objeto do produto a ser adicionado.
+         * @param {number} quantidade - A quantidade do produto a ser adicionada.
+         */
+        function adicionarAoCarrinho(produto, quantity) {
+            const existingItemIndex = carrinho.findIndex(p => p.id === produto.id); // Busca pelo ID
+            if (existingItemIndex > -1) {
+                carrinho[existingItemIndex].quantidade += quantity;
+                showToast(`Quantidade de ${produto.nome} atualizada para ${carrinho[existingItemIndex].quantidade} no carrinho!`);
+            } else {
+                carrinho.push({ ...produto, quantidade: quantity });
+                showToast(`${produto.nome} adicionado ao carrinho!`);
+            }
+            // produtosSelecionadosParaPedido é o array que realmente irá para o pedido
+            // Mantemos ele em sincronia com o carrinho para o formulário de pedido
+            const produtoNoPedido = produtosSelecionadosParaPedido.find(p => p.id === produto.id);
+            if (produtoNoPedido) {
+                produtoNoPedido.quantidade += quantity;
+            } else {
+                produtosSelecionadosParaPedido.push({ ...produto, quantidade: quantity });
+            }
+            // Não há mais um display de carrinho na vitrine, então removemos a chamada
+            // atualizarCarrinhoDisplay();
+        }
+
+        /**
+         * Exibe o modal do carrinho com os produtos e o total.
+         */
+        function exibirCarrinho() {
+            const carrinhoOverlay = document.getElementById('carrinho-overlay');
+            const carrinhoLista = document.getElementById('carrinho-lista');
+            const carrinhoModalTotal = document.getElementById('carrinho-modal-total');
+
+            carrinhoLista.innerHTML = ''; // Limpa a lista antes de preencher
+
+            if (carrinho.length === 0) {
+                carrinhoLista.innerHTML = '<p style="text-align: center; color: #666;">Seu carrinho está vazio.</p>';
+                carrinhoModalTotal.textContent = `Total: R$ 0,00`;
+                document.querySelector('#carrinho-modal .botoes-carrinho button.limpar').style.display = 'none';
+                document.querySelector('#carrinho-modal .botoes-carrinho button:last-child').style.display = 'none'; // Esconde o botão "Criar Pedido WhatsApp"
+            } else {
+                carrinho.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'item-carrinho';
+
+                    itemDiv.innerHTML = `
+                        <span>${item.nome} (${item.quantidade}x)</span>
+                        <span class="preco-item">R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
+                        <button onclick="excluirProdutoDoCarrinho(${index})">Excluir</button>
+                    `;
+                    carrinhoLista.appendChild(itemDiv);
+                });
+
+                const totalPreco = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+                carrinhoModalTotal.textContent = `Total: R$ ${totalPreco.toFixed(2)}`;
+                document.querySelector('#carrinho-modal .botoes-carrinho button.limpar').style.display = 'inline-block';
+                document.querySelector('#carrinho-modal .botoes-carrinho button:last-child').style.display = 'inline-block'; // Mostra o botão "Criar Pedido WhatsApp"
+            }
+            carrinhoOverlay.style.display = 'flex'; // Exibe o overlay
+        }
+
+        /**
+         * Fecha o modal do carrinho.
+         */
+        function fecharCarrinho() {
+            document.getElementById('carrinho-overlay').style.display = 'none';
+        }
+
+        /**
+         * Remove um produto do carrinho e atualiza as informações.
+         * @param {number} index - O índice do produto a ser removido no array do carrinho.
+         */
+        function excluirProdutoDoCarrinho(index) {
+            const itemRemovido = carrinho[index];
+            carrinho.splice(index, 1); // Remove o item do carrinho
+
+            // Remove o produto correspondente do array de produtos selecionados para o pedido
+            const indexNoProdutosSelecionados = produtosSelecionadosParaPedido.findIndex(p => p.id === itemRemovido.id);
+            if (indexNoProdutosSelecionados > -1) {
+                produtosSelecionadosParaPedido.splice(indexNoProdutosSelecionados, 1);
+            }
+
+            // Não há mais um display de carrinho na vitrine, então removemos a chamada
+            // atualizarCarrinhoDisplay();
+            exibirCarrinho(); // Reexibe o carrinho para refletir a remoção
+        }
+
+        /**
+         * Limpa todo o carrinho.
+         */
+        function limparCarrinho() {
+            carrinho = [];
+            produtosSelecionadosParaPedido = [];
+            // Não há mais um display de carrinho na vitrine, então removemos a chamada
+            // atualizarCarrinhoDisplay();
+            exibirCarrinho(); // Atualiza o modal para mostrar que está vazio
+        }
+
+        /**
+         * Redireciona do modal do carrinho para o formulário de compra.
+         */
+        function comprarProdutos() {
+            if (carrinho.length === 0) {
+                showToast('Seu carrinho está vazio. Adicione produtos antes de criar o pedido!');
+                return;
+            }
+            fecharCarrinho(); // Fecha o modal do carrinho
+            exibirFormularioCompra(); // Abre o formulário de compra
+        }
+
+        /* =========================================================
+           FUNÇÕES DO FORMULÁRIO DE COMPRA (MODAL)
+           ========================================================= */
+
+        /**
+         * Exibe o formulário de compra (modal de contato).
+         */
+        function exibirFormularioCompra() {
+            document.getElementById('formulario-compra-overlay').style.display = 'flex';
+            // Garante que os campos 'nome' e 'telefone' sejam sempre obrigatórios
+            document.getElementById('nome').setAttribute('required', 'true');
+            document.getElementById('telefone').setAttribute('required', 'true');
+            toggleEnderecoFields(); // Garante que o estado inicial dos campos de endereço esteja correto
+        }
+
+        /**
+         * Fecha o formulário de compra (modal de contato).
+         */
+        function fecharFormularioCompra() {
+            document.getElementById('formulario-compra-overlay').style.display = 'none';
+            document.getElementById('formulario-compra').reset(); // Limpa o formulário
+            document.getElementById('endereco-fields').style.display = 'none'; // Esconde campos de endereço
+        }
+
+        /**
+         * Alterna a visibilidade dos campos de endereço com base no tipo de pedido.
+         */
+        function toggleEnderecoFields() {
+            const tipoPedido = document.querySelector('input[name="tipoPedido"]:checked').value;
+            const enderecoFields = document.getElementById('endereco-fields');
+            const enderecoInput = document.getElementById('endereco');
+            const numeroInput = document.getElementById('numero');
+            const bairroInput = document.getElementById('bairro');
+            const cepInput = document.getElementById('cep');
+
+            if (tipoPedido === 'entrega') {
+                enderecoFields.style.display = 'block';
+                // Define campos de endereço como obrigatórios para entrega
+                enderecoInput.setAttribute('required', 'true');
+                numeroInput.setAttribute('required', 'true');
+                bairroInput.setAttribute('required', 'true');
+                cepInput.setAttribute('required', 'true');
+            } else {
+                enderecoFields.style.display = 'none';
+                // Remove a obrigatoriedade para retirada
+                enderecoInput.removeAttribute('required');
+                numeroInput.removeAttribute('required');
+                bairroInput.removeAttribute('required');
+                cepInput.removeAttribute('required');
+            }
+        }
+
+        /**
+         * Monta a mensagem do pedido e abre o WhatsApp.
+         */
+        function enviarPedidoWhatsApp() {
+            const nome = document.getElementById('nome').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const telefone = document.getElementById('telefone').value.trim();
+            const tipoPedido = document.querySelector('input[name="tipoPedido"]:checked').value;
+            const endereco = document.getElementById('endereco').value.trim();
+            const numero = document.getElementById('numero').value.trim();
+            const bairro = document.getElementById('bairro').value.trim();
+            const cep = document.getElementById('cep').value.trim();
+            const mensagemCliente = document.getElementById('mensagem').value.trim();
+
+            if (!nome || !telefone) {
+                showToast('Por favor, preencha seu nome e telefone.');
+                return;
+            }
+
+            if (tipoPedido === 'entrega' && (!endereco || !numero || !bairro || !cep)) {
+                showToast('Para entrega, por favor, preencha todos os campos de endereço (Rua, Número, Bairro, CEP).');
+                return;
+            }
+
+            let mensagem = `Olá, Armazém da Dona Lurdes!%0A`;
+            mensagem += `Meu nome é *${nome}* e gostaria de fazer um pedido.%0A%0A`;
+
+            if (email) {
+                mensagem += `Email: ${email}%0A`;
+            }
+            mensagem += `Telefone: ${telefone}%0A%0A`;
+
+            mensagem += `*Detalhes do Pedido:*%0A`;
+            produtosSelecionadosParaPedido.forEach(item => {
+                mensagem += `- ${item.nome} (${item.quantidade}x) - R$ ${(item.preco * item.quantidade).toFixed(2)}%0A`;
+            });
+            const totalPedido = produtosSelecionadosParaPedido.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+            mensagem += `*Total do Pedido: R$ ${totalPedido.toFixed(2)}*%0A%0A`;
+
+            mensagem += `*Tipo de Pedido:* ${tipoPedido === 'retirada' ? 'Retirada no Estabelecimento' : 'Para Entrega'}%0A`;
+
+            if (tipoPedido === 'entrega') {
+                mensagem += `*Endereço de Entrega:*%0A`;
+                mensagem += `${endereco}, ${numero}%0A`;
+                mensagem += `Bairro: ${bairro}%0A`;
+                mensagem += `CEP: ${cep}%0A`;
+            }
+
+            if (mensagemCliente) {
+                mensagem += `%0A*Observações:* ${mensagemCliente}%0A`;
+            }
+
+            // Número de telefone do Armazém da Dona Lurdes para receber pedidos
+            const numeroWhatsAppDonaLurdes = '5511999999999'; // Substitua pelo número real do WhatsApp do Armazém
+
+            window.open(`https://wa.me/${numeroWhatsAppDonaLurdes}?text=${mensagem}`, '_blank');
+
+            showToast('Pedido enviado para o WhatsApp! Aguarde o contato.');
+            fecharFormularioCompra(); // Fecha o formulário após o envio
+            limparCarrinho(); // Limpa o carrinho após o pedido ser "enviado"
+        }
+
+        /* =========================================================
+           FUNÇÕES DO PAINEL DE PEDIDOS (RETIRADA E ENTREGA)
+           ========================================================= */
+
+        /**
+         * Avança o status de um pedido para a próxima coluna.
+         * @param {string} pedidoId - O ID único do pedido (ex: 'ret1', 'ent2').
+         * @param {string} tipo - O tipo do pedido ('retirada' ou 'entrega').
+         */
+        function avancarStatus(pedidoId, tipo) {
+            const pedido = document.querySelector(`.cartao-pedido[data-id="${pedidoId}"]`);
+            if (!pedido) {
+                console.error(`Pedido com ID ${pedidoId} não encontrado.`);
+                return;
+            }
+
+            let currentColumnId = pedido.parentNode.id;
+            let currentStatusList;
+
+            // Determina a lista de status correta com base no tipo de pedido
+            if (tipo === 'retirada') {
+                currentStatusList = statusRetirada;
+            } else if (tipo === 'entrega') {
+                currentStatusList = statusEntrega;
+            } else {
+                console.error('Tipo de pedido inválido:', tipo);
+                return;
+            }
+
+            const currentStatusIndex = currentStatusList.indexOf(currentColumnId);
+
+            // Verifica se o pedido já está no último status
+            if (currentStatusIndex === currentStatusList.length - 1) {
+                pedido.remove(); // Remove o pedido da tela
+                showToast(`Pedido ${pedidoId} (${tipo}) concluído!`);
+                return;
+            }
+
+            // Move para o próximo status
+            const nextColumnId = currentStatusList[currentStatusIndex + 1];
+            const nextColumn = document.getElementById(nextColumnId);
+            if (nextColumn) {
+                nextColumn.appendChild(pedido);
+                updateControlesStatus(pedidoId, tipo); // Atualiza os botões após mover
+            } else {
+                console.error(`Coluna de destino ${nextColumnId} não encontrada.`);
+            }
+        }
+
+        /**
+         * Retrocede o status de um pedido para a coluna anterior.
+         * @param {string} pedidoId - O ID único do pedido.
+         * @param {string} tipo - O tipo do pedido ('retirada' ou 'entrega').
+         */
+        function retrocederStatus(pedidoId, tipo) {
+            const pedido = document.querySelector(`.cartao-pedido[data-id="${pedidoId}"]`);
+            if (!pedido) {
+                console.error(`Pedido com ID ${pedidoId} não encontrado.`);
+                return;
+            }
+
+            let currentColumnId = pedido.parentNode.id;
+            let currentStatusList;
+
+            if (tipo === 'retirada') {
+                currentStatusList = statusRetirada;
+            } else if (tipo === 'entrega') {
+                currentStatusList = statusEntrega;
+            } else {
+                console.error('Tipo de pedido inválido:', tipo);
+                return;
+            }
+
+            const currentStatusIndex = currentStatusList.indexOf(currentColumnId);
+
+            // Verifica se o pedido já está no primeiro status
+            if (currentStatusIndex === 0) {
+                showToast(`Pedido ${pedidoId} já está no primeiro status.`);
+                return;
+            }
+
+            // Move para o status anterior
+            const prevColumnId = currentStatusList[currentStatusIndex - 1];
+            const prevColumn = document.getElementById(prevColumnId);
+            if (prevColumn) {
+                prevColumn.appendChild(pedido);
+                updateControlesStatus(pedidoId, tipo); // Atualiza os botões após mover
+            } else {
+                console.error(`Coluna de destino ${prevColumnId} não encontrada.`);
+            }
+        }
+
+        /**
+         * Atualiza os botões de controle de status para um pedido específico.
+         * Isso é chamado após o pedido ser movido para uma nova coluna.
+         * @param {string} pedidoId - O ID único do pedido.
+         * @param {string} tipo - O tipo do pedido ('retirada' ou 'entrega').
+         */
+        function updateControlesStatus(pedidoId, tipo) {
+            const pedido = document.querySelector(`.cartao-pedido[data-id="${pedidoId}"]`);
+            if (!pedido) return;
+
+            const controles = pedido.querySelector('.controles-status');
+            controles.innerHTML = ''; // Limpa os botões existentes
+
+            let currentColumnId = pedido.parentNode.id;
+            let currentStatusList = (tipo === 'retirada') ? statusRetirada : statusEntrega;
+            const currentStatusIndex = currentStatusList.indexOf(currentColumnId);
+
+            // Adiciona o botão "Voltar" se não for o primeiro status
+            if (currentStatusIndex > 0) {
+                controles.innerHTML += `<button class="btn-anterior" onclick="retrocederStatus('${pedidoId}', '${tipo}')">Voltar</button>`;
+            }
+
+            // Adiciona o botão "Avançar" ou "Concluir"
+            if (currentStatusIndex < currentStatusList.length - 1) {
+                const nextStatusText = document.getElementById(currentStatusList[currentStatusIndex + 1]).querySelector('h3').textContent;
+                if (currentStatusIndex === currentStatusList.length - 2) { // Se for o penúltimo status
+                    controles.innerHTML += `<button class="btn-concluir" onclick="avancarStatus('${pedidoId}', '${tipo}')">Concluir ${nextStatusText}</button>`;
+                } else {
+                    controles.innerHTML += `<button class="btn-proximo" onclick="avancarStatus('${pedidoId}', '${tipo}')">Avançar para ${nextStatusText}</button>`;
+                }
+            } else {
+                // Se já está no último status, oferece a opção de remover/arquivar
+                controles.innerHTML += `<button class="btn-cancelar" onclick="pedido.remove();">Remover Pedido</button>`;
+            }
+        }
+
+        /* =========================================================
+           FUNÇÕES DE GERENCIAMENTO DE PRODUTOS (SEÇÃO "GERENCIAR PRODUTOS")
+           ========================================================= */
+
+        /**
+         * Renderiza a lista de produtos na seção de gerenciamento.
+         */
+        function renderizarProdutosGerenciar() {
+            const listaProdutosDiv = document.getElementById('listaProdutosGerenciar');
+            listaProdutosDiv.innerHTML = ''; // Limpa a lista antes de renderizar
+
+            if (produtos.length === 0) {
+                listaProdutosDiv.innerHTML = '<p style="text-align: center; color: #666; width: 100%;">Nenhum produto cadastrado.</p>';
+                return;
+            }
+
+            produtos.forEach(produto => {
+                const produtoDiv = document.createElement('div');
+                produtoDiv.classList.add('produto-gerenciar-item');
+                produtoDiv.dataset.id = produto.id;
+
+                const statusText = produto.isOutOfStock ? 'Esgotado' : 'Disponível';
+                const statusClass = produto.isOutOfStock ? 'esgotado' : 'disponivel';
+                const toggleButtonText = produto.isOutOfStock ? 'Marcar como Disponível' : 'Marcar como Esgotado';
+
+                produtoDiv.innerHTML = `
+                    <img src="${produto.imagem || 'https://placehold.co/150x100/f1f8e9/33691e?text=Produto'}" alt="${produto.nome}" onerror="this.onerror=null;this.src='https://placehold.co/150x100/f1f8e9/33691e?text=Produto';">
+                    <div class="produto-info">
+                        <h4>${produto.nome}</h4>
+                        <p>Categoria: <strong>${produto.categoria}</strong></p>
+                        <p>R$ ${produto.preco.toFixed(2)}</p>
+                        <p class="status-estoque ${statusClass}">${statusText}</p>
+                    </div>
+                    <div class="controles-gerenciamento">
+                        <button class="btn-toggle-estoque" onclick="toggleProductStockStatus('${produto.id}')">${toggleButtonText}</button>
+                        <button class="btn-deletar" onclick="deletarProduto('${produto.id}')">Excluir</button>
+                    </div>
+                `;
+                listaProdutosDiv.appendChild(produtoDiv);
+            });
+        }
+
+        /**
+         * Adiciona um novo produto à lista.
+         */
+        function adicionarProduto() {
+            const nomeInput = document.getElementById('produtoNome');
+            const precoInput = document.getElementById('produtoPreco');
+            const categoriaInput = document.getElementById('produtoCategoria');
+            const imagemInput = document.getElementById('produtoImagem');
+
+            const nome = nomeInput.value.trim();
+            const preco = parseFloat(precoInput.value);
+            const categoria = categoriaInput.value.trim();
+            const imagem = imagemInput.value.trim();
+
+            if (nome && !isNaN(preco) && preco > 0 && categoria) {
+                const newProduct = {
+                    id: `prod${nextProductId++}`,
+                    nome: nome,
+                    preco: preco,
+                    categoria: categoria,
+                    imagem: imagem,
+                    isOutOfStock: false // Novos produtos são adicionados como disponíveis por padrão
+                };
+                produtos.push(newProduct);
+                renderizarProdutosGerenciar(); // Atualiza a lista de gerenciamento
+                nomeInput.value = '';
+                precoInput.value = '';
+                categoriaInput.value = '';
+                imagemInput.value = '';
+                showToast('Produto adicionado com sucesso!');
+            } else {
+                showToast('Por favor, preencha o nome, categoria e um preço válido para o produto.');
+            }
+        }
+
+        /**
+         * Alterna o status de estoque de um produto.
+         * @param {string} id - O ID do produto a ser alterado.
+         */
+        function toggleProductStockStatus(id) {
+            const produtoIndex = produtos.findIndex(p => p.id === id);
+            if (produtoIndex > -1) {
+                produtos[produtoIndex].isOutOfStock = !produtos[produtoIndex].isOutOfStock;
+                renderizarProdutosGerenciar(); // Re-renderiza a lista para refletir a mudança
+                showToast(`Status de estoque de "${produtos[produtoIndex].nome}" alterado para ${produtos[produtoIndex].isOutOfStock ? 'Esgotado' : 'Disponível'}.`);
+            }
+        }
+
+        /**
+         * Deleta um produto da lista.
+         * @param {string} id - O ID do produto a ser deletado.
+         */
+        function deletarProduto(id) {
+            // Em um ambiente real, você usaria um modal de confirmação.
+            const confirmDelete = true; // Para demonstração, assume que o usuário confirmou
+            if (confirmDelete) {
+                produtos = produtos.filter(produto => produto.id !== id);
+                renderizarProdutosGerenciar(); // Atualiza a lista de gerenciamento
+                showToast('Produto excluído com sucesso!');
+            }
+        }
+
+        /* =========================================================
+           FUNÇÕES DE UTILIDADE
+           ========================================================= */
+
+        /**
+         * Exibe uma notificação "toast" temporária.
+         * @param {string} message - A mensagem a ser exibida.
+         * @param {number} duration - Duração em milissegundos (padrão: 3000).
+         */
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast-notification');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        // Inicialização ao carregar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializa os botões de controle de status para os pedidos de exemplo
+            document.querySelectorAll('.cartao-pedido').forEach(pedido => {
+                const pedidoId = pedido.dataset.id;
+                const tipo = pedidoId.startsWith('ret') ? 'retirada' : 'entrega';
+                updateControlesStatus(pedidoId, tipo);
+            });
+
+            // Ativa a seção "Pedidos para Retirada" por padrão ao carregar a página
+            setActiveSection('secaoRetirada');
+        });
+
+    </script>
+</body>
+</html>
